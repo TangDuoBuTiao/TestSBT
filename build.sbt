@@ -11,6 +11,8 @@ libraryDependencies += "org.apache.spark" %% "spark-streaming" % "2.3.2" % "prov
 
 libraryDependencies += "org.apache.spark" %% "spark-streaming-kafka-0-8" % "2.3.2"
 
+libraryDependencies += "org.apache.spark" % "spark-mllib_2.11" % "2.3.2" % "provided"
+
 libraryDependencies += "org.apache.hbase" % "hbase-client" % "1.1.5" % "provided"
 
 libraryDependencies += "org.apache.hbase" % "hbase-common" % "1.1.5" % "provided"
