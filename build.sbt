@@ -1,3 +1,4 @@
+import sbt.Keys.libraryDependencies
 
 name := "TestSBT"
 
@@ -5,19 +6,26 @@ version := "0.1"
 
 scalaVersion := "2.11.8"
 
-libraryDependencies += "org.apache.spark" % "spark-core_2.11" % "2.3.2" % "provided"
+libraryDependencies ++= Seq(
+  "org.apache.spark" % "spark-core_2.11" % "2.3.2" % "provided",
 
-libraryDependencies += "org.apache.spark" %% "spark-streaming" % "2.3.2" % "provided"
+  "org.apache.spark" %% "spark-streaming" % "2.3.2" % "provided",
 
-libraryDependencies += "org.apache.spark" %% "spark-streaming-kafka-0-8" % "2.3.2"
+  "org.apache.spark" %% "spark-streaming-kafka-0-8" % "2.3.2",
 
-libraryDependencies += "org.apache.spark" % "spark-mllib_2.11" % "2.3.2" % "provided"
+  "org.apache.spark" % "spark-mllib_2.11" % "2.3.2" % "provided",
+
+  "org.apache.spark" %% "spark-sql" % "2.3.2" % "provided"
+
+)
+
 
 libraryDependencies += "org.apache.hbase" % "hbase-client" % "1.1.5" % "provided"
 
 libraryDependencies += "org.apache.hbase" % "hbase-common" % "1.1.5" % "provided"
 
 libraryDependencies += "org.apache.hbase" % "hbase-server" % "1.1.5" % "provided"
+
 
 assemblyJarName in assembly := "kafka.jar"
 
