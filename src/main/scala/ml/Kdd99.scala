@@ -1,6 +1,6 @@
 package ml
 
-import org.apache.spark.ml.classification.DecisionTreeClassifier
+import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier}
 import org.apache.spark.ml.feature.{StringIndexer, VectorAssembler}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -8,17 +8,17 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
 import org.apache.spark.ml.{Pipeline, PipelineModel}
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
-import org.apache.spark.ml.feature.{VectorIndexer, VectorIndexerModel}
+import org.apache.spark.ml.feature.VectorIndexer
+import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
 
 object Kdd99 extends App {
 
-  val conf = new SparkConf().setAppName("DecisionTree").setMaster("spark://sict136:7077")
+  val conf = new SparkConf().setAppName("DecisionTree").setMaster("local[16]")
   val sc = new SparkContext(conf)
   sc.setLogLevel("ERROR")
 
   val spark = SparkSession.builder().appName("Kdd99").config("example", "some-value").getOrCreate()
 
-  import spark.implicits._
 
   //读取数据并给数据添加表头
   val data = spark.read.csv("/user/Tian/data/kddcup.data")
@@ -86,23 +86,23 @@ object Kdd99 extends App {
   val featureIndexer = new VectorIndexer().setInputCol("features").setOutputCol("indexedFeatures").fit(dataset)
 
   //创建决策树模型
-  val dt = new DecisionTreeClassifier().setLabelCol("label")
+  val decisionTree = new DecisionTreeClassifier().setLabelCol("label")
     .setFeaturesCol("indexedFeatures").setImpurity("entropy").setMaxBins(100).setMaxDepth(5).setMinInfoGain(0.01)
-
-  import org.apache.spark.ml.tuning.{ParamGridBuilder, CrossValidator}
+  println("创建决策树模型...")
 
   //配置流水线
-  val dtPipline = new Pipeline().setStages(Array(featureIndexer, dt))
+  val dtPipline = new Pipeline().setStages(Array(featureIndexer, decisionTree))
+  println("配置流水线...")
 
   /*
   模型优化
    */
   //配置网格参数
   val dtParamGrid = new ParamGridBuilder()
-    .addGrid(dt.maxDepth, Array(3, 5, 7))
+    .addGrid(decisionTree.maxDepth, Array(3, 5, 7))
     .build()
 
-  //实例化较差验证模型
+  //实例化交叉验证模型
   val evaluator = new BinaryClassificationEvaluator()
   val dtCV = new CrossValidator()
     .setEstimator(dtPipline)
@@ -116,7 +116,8 @@ object Kdd99 extends App {
 
   //查看决策树匹配模型的参数
   val dtBestModel = dtCVModel.bestModel.asInstanceOf[PipelineModel]
-  val dtModel = dtBestModel.stages(1).asInstanceOf[DecisionTreeClassifier]
+  val dtModel = dtBestModel.stages(1).asInstanceOf[DecisionTreeClassificationModel]
+  print("决策树模型深度：")
   println(dtModel.getMaxDepth)
 
   //统计预测正确率
@@ -133,6 +134,6 @@ object Kdd99 extends App {
     }
   }
   //打印正确率
-  println(1.0 * dt / count)
+  println("正确率：" + 1.0 * dt / count)
 
 }
